@@ -1,0 +1,15 @@
+services:
+  app:
+    image: ghcr.io/mangeloguy/build-status-dashboard:${IMAGE_TAG:-latest}
+    container_name: build-status-dashboard
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      APP_ENV: staging
+      DB_PATH: /data/app.db
+    volumes:
+      - app-data:/data
+
+volumes:
+  app-data:

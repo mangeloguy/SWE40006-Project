@@ -1,0 +1,42 @@
+name: Rollback
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Environment to roll back
+        required: true
+        default: staging
+        type: choice
+        options:
+          - staging
+          - production
+      tag:
+        description: Short commit SHA of the image to redeploy, e.g. 4dbc81d
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  rollback:
+    name: Roll back ${{ inputs.environment }} to ${{ inputs.tag }}
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: ${{ inputs.environment }}
+    concurrency: ${{ inputs.environment }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Redeploy
+        env:
+          DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ vars.DEPLOY_USER }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TARGET: ${{ inputs.environment }}
+          TAG: ${{ inputs.tag }}
+        run: bash docker/deploy.sh "$TARGET" "$TAG"
