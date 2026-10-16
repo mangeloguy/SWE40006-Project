@@ -36,8 +36,8 @@ scp "docker/compose.$env_name.yml" "server:$app_dir/compose.yml"
 
 if [ -n "${GHCR_TOKEN:-}" ]; then
 
-  printf '%s' "$GHCR_TOKEN" | ssh server "mkdir -p /tmp/ghcr && DOCKER_CONFIG=/tmp/ghcr docker login ghcr.io -u $GITHUB_ACTOR --password-stdin"
-  trap 'ssh server "DOCKER_CONFIG=/tmp/ghcr docker logout ghcr.io" > /dev/null 2>&1 || true' EXIT
+  AUTH=$(printf '%s:%s' "$GITHUB_ACTOR" "$GHCR_TOKEN" | base64 | tr -d '\n')
+  ssh server "mkdir -p /tmp/ghcr && printf '%s' '{\"auths\":{\"ghcr.io\":{\"auth\":\"$AUTH\"}}}' > /tmp/ghcr/config.json"
 fi
 
 ssh server "cd $app_dir && DOCKER_CONFIG=/tmp/ghcr IMAGE_TAG=$tag docker compose pull && echo IMAGE_TAG=$tag > .env && docker compose up -d && docker image prune -f > /dev/null"
