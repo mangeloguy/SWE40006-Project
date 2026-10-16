@@ -35,11 +35,12 @@ ssh server "mkdir -p $app_dir"
 scp "docker/compose.$env_name.yml" "server:$app_dir/compose.yml"
 
 if [ -n "${GHCR_TOKEN:-}" ]; then
-  printf '%s' "$GHCR_TOKEN" | ssh server "docker login ghcr.io -u $GITHUB_ACTOR --password-stdin"
-  trap 'ssh server "docker logout ghcr.io" > /dev/null 2>&1 || true' EXIT
+
+  printf '%s' "$GHCR_TOKEN" | ssh server "mkdir -p /tmp/ghcr && DOCKER_CONFIG=/tmp/ghcr docker login ghcr.io -u $GITHUB_ACTOR --password-stdin"
+  trap 'ssh server "DOCKER_CONFIG=/tmp/ghcr docker logout ghcr.io" > /dev/null 2>&1 || true' EXIT
 fi
 
-ssh server "cd $app_dir && IMAGE_TAG=$tag docker compose pull && echo IMAGE_TAG=$tag > .env && docker compose up -d && docker image prune -f > /dev/null"
+ssh server "cd $app_dir && DOCKER_CONFIG=/tmp/ghcr IMAGE_TAG=$tag docker compose pull && echo IMAGE_TAG=$tag > .env && docker compose up -d && docker image prune -f > /dev/null"
 
 for _ in $(seq 1 20); do
   if ssh server "curl -fsS -m 5 http://localhost:3000/health" > health.json 2> health.err \
