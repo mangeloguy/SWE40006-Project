@@ -1,4 +1,4 @@
-# 测试与覆盖率相关依赖，在运行环境依赖基础上追加
+
 -r requirements.txt
 pytest==8.4.1
 pytest-cov==6.0.0

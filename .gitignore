@@ -3,7 +3,6 @@
 __pycache__/
 data/
 
-# 测试与覆盖率产物
 .pytest_cache/
 .coverage
 htmlcov/
