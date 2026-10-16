@@ -31,6 +31,11 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      - name: Connect to Tailscale
+        uses: tailscale/github-action@v3
+        with:
+          authkey: ${{ secrets.TS_AUTHKEY }}
+
       - name: Redeploy
         env:
           DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
