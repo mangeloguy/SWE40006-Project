@@ -40,7 +40,7 @@ if [ -n "${GHCR_TOKEN:-}" ]; then
   ssh server "mkdir -p /tmp/ghcr && printf '%s' '{\"auths\":{\"ghcr.io\":{\"auth\":\"$AUTH\"}}}' > /tmp/ghcr/config.json"
 fi
 
-ssh server "cd $app_dir && DOCKER_CONFIG=/tmp/ghcr IMAGE_TAG=$tag docker-compose pull && echo IMAGE_TAG=$tag > .env && docker rm -f build-status-dashboard 2>/dev/null || true && docker-compose up -d && docker image prune -f > /dev/null"
+ssh server "cd $app_dir && DOCKER_CONFIG=/tmp/ghcr IMAGE_TAG=$tag docker-compose pull && echo IMAGE_TAG=$tag > .env && {docker rm -f build-status-dashboard 2>/dev/null || true; } && docker-compose up -d && docker image prune -f > /dev/null"
 
 for _ in $(seq 1 20); do
   if ssh server "curl -fsS -m 5 http://localhost:3000/health" > health.json 2> health.err \

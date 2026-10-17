@@ -16,7 +16,7 @@ env:
 jobs:
   test:
     name: Test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
 
@@ -35,7 +35,7 @@ jobs:
   build:
     name: Build image
     needs: test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
       packages: write
@@ -80,7 +80,7 @@ jobs:
     name: Deploy to staging
     if: github.ref == 'refs/heads/main'
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     environment: staging
     concurrency: staging
@@ -107,7 +107,7 @@ jobs:
   promote:
     name: Promote to latest
     needs: [build, staging]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
       contents: read
@@ -124,7 +124,7 @@ jobs:
   production:
     name: Deploy to production
     needs: [build, promote]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     environment: production
     concurrency: production
