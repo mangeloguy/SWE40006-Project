@@ -1,16 +1,66 @@
+import sqlite3
+from contextlib import closing
 
 import pytest
+from fastapi.testclient import TestClient
 
-pytestmark = pytest.mark.skip(reason="依赖 app 的 SQLite 部署历史功能尚未实现")
+from app import db
+from app.main import app
+
+
+@pytest.fixture(autouse=True)
+def temp_db(tmp_path, monkeypatch):
+    monkeypatch.setenv("DB_PATH", str(tmp_path / "test.db"))
 
 
 def test_deployment_record_is_persisted():
-    """写入一条部署记录后，应能从 SQLite 读回一致的 commit、环境与时间。"""
+    """After writing a deployment record, the same commit, environment and time are read back."""
+    db.record_deployment(
+        "a3f9c2e", "staging", "2026-10-18T10:00:00Z", deployed_at="2026-10-18T10:05:00+00:00"
+    )
+
+    assert db.get_history() == [
+        {
+            "commit_hash": "a3f9c2e",
+            "environment": "staging",
+            "build_time": "2026-10-18T10:00:00Z",
+            "deployed_at": "2026-10-18T10:05:00+00:00",
+        }
+    ]
 
 
 def test_deployment_history_is_ordered():
-    """历史记录应按时间倒序返回，最新部署在前。"""
+    """History is returned newest first, whatever order the rows were written in."""
+    db.record_deployment("aaaaaaa", "staging", "t1", deployed_at="2026-10-18T09:00:00+00:00")
+    db.record_deployment("ccccccc", "staging", "t3", deployed_at="2026-10-18T11:00:00+00:00")
+    db.record_deployment("bbbbbbb", "production", "t2", deployed_at="2026-10-18T10:00:00+00:00")
+
+    commits = [row["commit_hash"] for row in db.get_history()]
+
+    assert commits == ["ccccccc", "bbbbbbb", "aaaaaaa"]
 
 
-def test_db_path_env_var_controls_location():
-    """修改 DB_PATH 后，记录应写入到指定文件路径。"""
+def test_db_path_env_var_controls_location(tmp_path, monkeypatch):
+    """Changing DB_PATH writes the record to that file, creating missing folders."""
+    custom = tmp_path / "nested" / "custom.db"
+    monkeypatch.setenv("DB_PATH", str(custom))
+
+    db.record_deployment("a3f9c2e", "dev", "local")
+
+    assert custom.exists()
+    with closing(sqlite3.connect(custom)) as conn:
+        assert conn.execute("SELECT COUNT(*) FROM deployments").fetchone()[0] == 1
+
+
+def test_app_startup_records_a_deployment(monkeypatch):
+    """Starting the app writes one row built from the environment variables."""
+    monkeypatch.setenv("GIT_COMMIT", "abc1234")
+    monkeypatch.setenv("APP_ENV", "staging")
+    monkeypatch.setenv("BUILD_TIME", "2026-10-18T10:00:00Z")
+
+    with TestClient(app):
+        pass
+
+    latest = db.get_history()[0]
+    assert latest["commit_hash"] == "abc1234"
+    assert latest["environment"] == "staging"
