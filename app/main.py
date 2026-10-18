@@ -1,9 +1,30 @@
+import logging
 import os
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from prometheus_fastapi_instrumentator import Instrumentator
 
-app = FastAPI(title="Build Status Dashboard")
+from app import db
+
+logger = logging.getLogger("uvicorn.error")
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # One row per container start. A database problem is logged but must never take /health down.
+    try:
+        db.record_deployment(
+            os.getenv("GIT_COMMIT", "unknown"),
+            os.getenv("APP_ENV", "dev"),
+            os.getenv("BUILD_TIME", "unknown"),
+        )
+    except Exception:
+        logger.exception("could not record deployment")
+    yield
+
+
+app = FastAPI(title="Build Status Dashboard", lifespan=lifespan)
 
 
 @app.get("/health")
