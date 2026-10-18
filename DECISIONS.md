@@ -16,3 +16,9 @@
 
 - Registry: the brief does not name one. GHCR is proposed.
 - Image tags: build once, tag with the short commit SHA, and only move `latest` after staging passes, so production never pulls an untested image (1.1, Fig. 1).
+
+## Changes from the project brief
+
+| Brief | What we did | Why |
+|---|---|---|
+| CI on a self-hosted GitHub Actions runner (1.1, 3.2) | GitHub-hosted runner (ubuntu-24.04). The deploy jobs join Tailscale to reach the staging machine over SSH | [Gene to confirm the reason] |
