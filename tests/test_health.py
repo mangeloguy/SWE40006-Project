@@ -1,6 +1,6 @@
 
 def test_health_returns_ok(client):
-    """GET /health 返回 200，且 status 字段为 ok。"""
+    """GET /health returns a 200 status code, and the status field is “ok.”"""
     resp = client.get("/health")
     assert resp.status_code == 200
     assert resp.json()["status"] == "ok"

@@ -64,3 +64,31 @@ def test_app_startup_records_a_deployment(monkeypatch):
     latest = db.get_history()[0]
     assert latest["commit_hash"] == "abc1234"
     assert latest["environment"] == "staging"
+
+
+def test_app_stays_up_when_deployment_record_fails(monkeypatch):
+    """The app can still start even if a DB write fails, and /health remains up."""
+    def boom(*args, **kwargs):
+        raise RuntimeError("db down")
+
+    monkeypatch.setattr(db, "record_deployment", boom)
+
+    with TestClient(app) as client:
+        resp = client.get("/health")
+
+    assert resp.status_code == 200
+    assert resp.json()["status"] == "ok"
+
+
+def test_dashboard_falls_back_to_empty_history_on_db_error(monkeypatch):
+    """When a DB read fails, the homepage returns an empty history instead of a 500 error."""
+    def boom(*args, **kwargs):
+        raise RuntimeError("db down")
+
+    monkeypatch.setattr(db, "get_history", boom)
+
+    with TestClient(app) as client:
+        resp = client.get("/")
+
+    assert resp.status_code == 200
+    assert "No deployments recorded yet" in resp.text

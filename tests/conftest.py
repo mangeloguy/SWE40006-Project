@@ -7,5 +7,5 @@ from app.main import app
 
 @pytest.fixture
 def client():
-    """返回一个基于当前应用的 TestClient，测试无需重复构造应用实例。"""
+    """Returns a TestClient based on the current application, eliminating the need to repeatedly construct application instances for testing."""
     return TestClient(app)
