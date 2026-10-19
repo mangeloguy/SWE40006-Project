@@ -7,7 +7,7 @@ PAGE = Template("""<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="refresh" content="10">
-<title>Build status dashboard 1</title>
+<title>Build status dashboard</title>
 <style>
   body { font-family: Arial, Helvetica, sans-serif; color: #222; background: #fff; margin: 0; line-height: 1.5; }
   main { max-width: 720px; margin: 0 auto; padding: 24px 16px 48px; }
@@ -29,7 +29,7 @@ PAGE = Template("""<!doctype html>
 <body>
 <main>
   <header>
-    <h1>Build status dashboard</h1>
+    <h1>Build status dashboard test</h1>
     <p class="sub">SWE40006 project, Group 02</p>
   </header>
   <p>This is the <strong>$environment</strong> environment. It is running commit <code>$commit</code>, built at $build_time.</p>
