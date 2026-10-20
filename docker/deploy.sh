@@ -33,6 +33,7 @@ EOF
 
 ssh server "mkdir -p $app_dir"
 scp "docker/compose.$env_name.yml" "server:$app_dir/compose.yml"
+scp -r docker/prometheus docker/grafana "server:$app_dir/"
 
 if [ -n "${GHCR_TOKEN:-}" ]; then
 
