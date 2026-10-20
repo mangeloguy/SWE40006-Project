@@ -1,0 +1,15 @@
+# Prometheus scrape config for the build-status-dashboard production stack.
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  # Application-level metrics exposed by the FastAPI app (/metrics).
+  - job_name: "build-status-dashboard"
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["app:3000"]
+
+  # Host-level system metrics (CPU, RAM, disk, network) via node-exporter.
+  - job_name: "node"
+    static_configs:
+      - targets: ["node-exporter:9100"]
